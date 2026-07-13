@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fórmulas de Enfermagem - Ferratech</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 15px; background-color: #f0f2f5; }
+        h1 { color: #2c3e50; text-align: center; font-size: 1.5rem; }
+        .main-container { display: flex; gap: 20px; align-items: flex-start; }
+        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .content-area { flex: 2; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 300px; }
+        button { padding: 12px; border: none; border-radius: 6px; background-color: #3498db; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
+        button:hover { background-color: #2980b9; }
+        .btn-active { background-color: #27ae60 !important; }
+        .calc-box { display: none; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .resultado { font-weight: bold; color: #e67e22; font-size: 1.2rem; margin-top: 15px; }
+        @media (max-width: 600px) { .main-container { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+    <h1>Fórmulas Úteis</h1>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <button onclick="mostrar('gotejamento', this)">Gotejamento</button>
+            <button onclick="mostrar('imc', this)">IMC</button>
+            <button onclick="mostrar('dengue', this)">Hidratação Dengue</button>
+            <button onclick="mostrar('med', this)">Cálculo de Dose</button>
+        </div>
+
+        <div class="content-area" id="quadro">
+            <p>Selecione uma fórmula ao lado.</p>
+
+            <!-- Gotejamento -->
+            <div id="gotejamento" class="calc-box">
+                <h3>Gotejamento (Macro)</h3>
+                <input type="number" id="vol" placeholder="Volume (ml)">
+                <input type="number" id="tempo" placeholder="Tempo (horas)">
+                <button onclick="calcGotejamento()" style="background-color: #e67e22;">Calcular</button>
+                <p id="resGotejo" class="resultado"></p>
+            </div>
+
+            <!-- IMC -->
+            <div id="imc" class="calc-box">
+                <h3>Cálculo de IMC</h3>
+                <input type="number" id="peso" placeholder="Peso (kg)">
+                <input type="number" id="altura" placeholder="Altura (ex: 1.70)">
+                <button onclick="calcIMC()" style="background-color: #e67e22;">Calcular</button>
+                <p id="resIMC" class="resultado"></p>
+            </div>
+
+            <!-- Dengue -->
+            <div id="dengue" class="calc-box">
+                <h3>Hidratação Dengue</h3>
+                <input type="number" id="pesoD" placeholder="Peso do paciente (kg)">
+                <select id="tipoHidratacao">
+                    <option value="35">Manutenção (35 ml/kg)</option>
+                    <option value="80">Hidratação Intensa (80 ml/kg)</option>
+                </select>
+                <button onclick="calcDengue()" style="background-color: #e67e22;">Calcular</button>
+                <p id="resDengue" class="resultado"></p>
+            </div>
+
+            <!-- Dose Medicamento -->
+            <div id="med" class="calc-box">
+                <h3>Cálculo de Dose (Regra de 3)</h3>
+                <input type="number" id="doseDesejada" placeholder="Dose Prescrita (mg)">
+                <input type="number" id="doseDisponivel" placeholder="Dose Disponível (mg)">
+                <input type="number" id="volumeDisponivel" placeholder="Volume Disponível (ml)">
+                <button onclick="calcMedicamento()" style="background-color: #e67e22;">Calcular</button>
+                <p id="resMed" class="resultado"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function mostrar(id, btn) {
+            document.querySelectorAll('.calc-box').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('btn-active'));
+            document.getElementById(id).style.display = 'block';
+            btn.classList.add('btn-active');
+            document.getElementById('quadro').querySelector('p').style.display = 'none';
+        }
+        function calcGotejamento() {
+            let v = document.getElementById('vol').value;
+            let t = document.getElementById('tempo').value;
+            let res = (v / (t * 3)).toFixed(0);
+            document.getElementById('resGotejo').innerText = "Resultado: " + res + " gotas/min";
+        }
+        function calcIMC() {
+            let p = parseFloat(document.getElementById('peso').value);
+            let a = parseFloat(document.getElementById('altura').value);
+            let res = (p / (a * a)).toFixed(1);
+            let cat = (res < 18.5) ? "Abaixo do peso" : (res < 25) ? "Peso normal" : (res < 30) ? "Sobrepeso" : "Obesidade";
+            document.getElementById('resIMC').innerHTML = "Resultado: " + res + "<br><strong>" + cat + "</strong>";
+        }
+        function calcDengue() {
+            let p = document.getElementById('pesoD').value;
+            let tipo = document.getElementById('tipoHidratacao').value;
+            let resML = (p * tipo);
+            let resL = (resML / 1000).toFixed(2);
+            document.getElementById('resDengue').innerHTML = "Resultado: " + resML + " ml/dia<br><small>(ou " + resL + " L/dia)</small>";
+        }
+        function calcMedicamento() {
+            let d = parseFloat(document.getElementById('doseDesejada').value);
+            let disp = parseFloat(document.getElementById('doseDisponivel').value);
+            let v = parseFloat(document.getElementById('volumeDisponivel').value);
+            let res = (d * v) / disp;
+            document.getElementById('resMed').innerText = "Resultado: " + res.toFixed(2) + " ml";
+        }
+    </script>
+</body>
+</html>
