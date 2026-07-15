@@ -5,24 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fórmulas de Enfermagem - Ferratech</title>
     <style>
-     
-  body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-  }
-
         body { font-family: 'Segoe UI', sans-serif; padding: 15px; background-color: #f0f2f5; }
         h1 { color: #2c3e50; text-align: center; font-size: 1.5rem; }
-        .main-container { display: flex; gap: 20px; align-items: flex-start; }
-        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-        .content-area { flex: 2; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 300px; }
-        button { padding: 12px; border: none; border-radius: 6px; background-color: #3498db; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
+        .main-container { display: flex; gap: 15px; align-items: flex-start; }
+        /* Sidebar com duas colunas */
+        .sidebar { flex: 1; display: flex; gap: 5px; }
+        .coluna { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .content-area { flex: 2; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 350px; }
+        button { padding: 10px; border: none; border-radius: 6px; background-color: #3498db; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         button:hover { background-color: #2980b9; }
         .btn-active { background-color: #27ae60 !important; }
         .calc-box { display: none; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .resultado { font-weight: bold; color: #e67e22; font-size: 1.2rem; margin-top: 15px; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .resultado { font-weight: bold; color: #e67e22; font-size: 1.1rem; margin-top: 15px; }
         @media (max-width: 600px) { .main-container { flex-direction: column; } }
     </style>
 </head>
@@ -31,11 +26,20 @@
     <h1>Fórmulas Úteis</h1>
 
     <div class="main-container">
+        <!-- Sidebar agora com duas colunas -->
         <div class="sidebar">
-            <button onclick="mostrar('gotejamento', this)">Gotejamento</button>
-            <button onclick="mostrar('imc', this)">IMC</button>
-            <button onclick="mostrar('dengue', this)">Hidratação Dengue</button>
-            <button onclick="mostrar('med', this)">Cálculo de Dose</button>
+            <div class="coluna">
+                <button onclick="mostrar('gotejamento', this)">Gotejamento</button>
+                <button onclick="mostrar('imc', this)">IMC</button>
+                <button onclick="mostrar('dengue', this)">Hidratação Dengue</button>
+                <button onclick="mostrar('med', this)">Cálculo de Dose</button>
+            </div>
+            <div class="coluna">
+                <button onclick="mostrar('regra3', this)">Regra de 3</button>
+                <button onclick="mostrar('conversao', this)">Conversão</button>
+                <button onclick="mostrar('gesta', this)">DUM (Gestação)</button>
+                <button onclick="mostrar('glasgow', this)">Glasgow</button>
+            </div>
         </div>
 
         <div class="content-area" id="quadro">
@@ -46,7 +50,7 @@
                 <h3>Gotejamento (Macro)</h3>
                 <input type="number" id="vol" placeholder="Volume (ml)">
                 <input type="number" id="tempo" placeholder="Tempo (horas)">
-                <button onclick="calcGotejamento()" style="background-color: #e67e22;">Calcular</button>
+                <button onclick="calcGotejamento()">Calcular</button>
                 <p id="resGotejo" class="resultado"></p>
             </div>
 
@@ -55,7 +59,7 @@
                 <h3>Cálculo de IMC</h3>
                 <input type="number" id="peso" placeholder="Peso (kg)">
                 <input type="number" id="altura" placeholder="Altura (ex: 1.70)">
-                <button onclick="calcIMC()" style="background-color: #e67e22;">Calcular</button>
+                <button onclick="calcIMC()">Calcular</button>
                 <p id="resIMC" class="resultado"></p>
             </div>
 
@@ -65,9 +69,9 @@
                 <input type="number" id="pesoD" placeholder="Peso do paciente (kg)">
                 <select id="tipoHidratacao">
                     <option value="35">Manutenção (35 ml/kg)</option>
-                    <option value="80">Hidratação Intensa (80 ml/kg)</option>
+                    <option value="80">Intensa (80 ml/kg)</option>
                 </select>
-                <button onclick="calcDengue()" style="background-color: #e67e22;">Calcular</button>
+                <button onclick="calcDengue()">Calcular</button>
                 <p id="resDengue" class="resultado"></p>
             </div>
 
@@ -77,8 +81,41 @@
                 <input type="number" id="doseDesejada" placeholder="Dose Prescrita (mg)">
                 <input type="number" id="doseDisponivel" placeholder="Dose Disponível (mg)">
                 <input type="number" id="volumeDisponivel" placeholder="Volume Disponível (ml)">
-                <button onclick="calcMedicamento()" style="background-color: #e67e22;">Calcular</button>
+                <button onclick="calcMedicamento()">Calcular</button>
                 <p id="resMed" class="resultado"></p>
+            </div>
+
+            <!-- Regra de 3 -->
+            <div id="regra3" class="calc-box">
+                <h3>Regra de Três Simples</h3>
+                <input type="number" id="a" placeholder="A (Ex: 100ml)">
+                <input type="number" id="b" placeholder="B (Ex: 50mg)">
+                <input type="number" id="c" placeholder="C (Ex: 200ml)">
+                <button onclick="calcRegra3()">Calcular X</button>
+                <p id="resR3" class="resultado"></p>
+            </div>
+
+            <!-- Conversão -->
+            <div id="conversao" class="calc-box">
+                <h3>Conversão mg para mcg</h3>
+                <input type="number" id="mg" placeholder="Valor em mg">
+                <button onclick="calcConv()">Converter</button>
+                <p id="resConv" class="resultado"></p>
+            </div>
+
+            <!-- Gestação -->
+            <div id="gesta" class="calc-box">
+                <h3>Cálculo Idade Gestacional</h3>
+                <input type="date" id="dum">
+                <button onclick="calcGesta()">Calcular Semanas</button>
+                <p id="resGesta" class="resultado"></p>
+            </div>
+
+            <!-- Glasgow -->
+            <div id="glasgow" class="calc-box">
+                <h3>Escala de Glasgow</h3>
+                <p>Esta ferramenta é apenas para consulta rápida.</p>
+                <button onclick="window.open('https://pt.wikipedia.org/wiki/Escala_de_coma_de_Glasgow', '_blank')">Ver Critérios</button>
             </div>
         </div>
     </div>
@@ -94,29 +131,34 @@
         function calcGotejamento() {
             let v = document.getElementById('vol').value;
             let t = document.getElementById('tempo').value;
-            let res = (v / (t * 3)).toFixed(0);
-            document.getElementById('resGotejo').innerText = "Resultado: " + res + " gotas/min";
+            document.getElementById('resGotejo').innerText = "Resultado: " + (v / (t * 3)).toFixed(0) + " gotas/min";
         }
         function calcIMC() {
             let p = parseFloat(document.getElementById('peso').value);
             let a = parseFloat(document.getElementById('altura').value);
             let res = (p / (a * a)).toFixed(1);
             let cat = (res < 18.5) ? "Abaixo do peso" : (res < 25) ? "Peso normal" : (res < 30) ? "Sobrepeso" : "Obesidade";
-            document.getElementById('resIMC').innerHTML = "Resultado: " + res + "<br><strong>" + cat + "</strong>";
+            document.getElementById('resIMC').innerHTML = "IMC: " + res + "<br><strong>" + cat + "</strong>";
         }
         function calcDengue() {
             let p = document.getElementById('pesoD').value;
-            let tipo = document.getElementById('tipoHidratacao').value;
-            let resML = (p * tipo);
-            let resL = (resML / 1000).toFixed(2);
-            document.getElementById('resDengue').innerHTML = "Resultado: " + resML + " ml/dia<br><small>(ou " + resL + " L/dia)</small>";
+            let resML = (p * document.getElementById('tipoHidratacao').value);
+            document.getElementById('resDengue').innerText = "Resultado: " + resML + " ml/dia";
         }
         function calcMedicamento() {
-            let d = parseFloat(document.getElementById('doseDesejada').value);
-            let disp = parseFloat(document.getElementById('doseDisponivel').value);
-            let v = parseFloat(document.getElementById('volumeDisponivel').value);
-            let res = (d * v) / disp;
+            let res = (parseFloat(document.getElementById('doseDesejada').value) * parseFloat(document.getElementById('volumeDisponivel').value)) / parseFloat(document.getElementById('doseDisponivel').value);
             document.getElementById('resMed').innerText = "Resultado: " + res.toFixed(2) + " ml";
+        }
+        function calcRegra3() {
+            let res = (parseFloat(document.getElementById('b').value) * parseFloat(document.getElementById('c').value)) / parseFloat(document.getElementById('a').value);
+            document.getElementById('resR3').innerText = "Resultado: " + res.toFixed(2);
+        }
+        function calcConv() {
+            document.getElementById('resConv').innerText = "Resultado: " + (document.getElementById('mg').value * 1000) + " mcg";
+        }
+        function calcGesta() {
+            let diff = Math.floor((new Date() - new Date(document.getElementById('dum').value)) / (1000 * 60 * 60 * 24 * 7));
+            document.getElementById('resGesta').innerText = "Idade: " + diff + " semanas";
         }
     </script>
 </body>
