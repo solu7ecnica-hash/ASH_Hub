@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabelas de Consulta - Ferratech</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 15px; background-color: #f0f2f5; }
+        h1 { color: #2c3e50; text-align: center; font-size: 1.5rem; }
+        .main-container { display: flex; gap: 20px; align-items: flex-start; }
+        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .content-area { flex: 2; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 300px; overflow-x: auto; }
+        button { padding: 12px; border: none; border-radius: 6px; background-color: #3498db; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
+        button:hover { background-color: #2980b9; }
+        .btn-active { background-color: #27ae60 !important; }
+        .table-box { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        @media (max-width: 600px) { .main-container { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+    <h1>Consultas Rápidas</h1>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <button onclick="mostrar('sinais', this)">Sinais Vitais</button>
+            <button onclick="mostrar('jelcos', this)">Calibres (Jelcos)</button>
+            <button onclick="mostrar('imc', this)">Classif. IMC</button>
+            <button onclick="mostrar('dor', this)">Escala de Dor</button>
+            <button onclick="mostrar('diluicao', this)">Diluição Med.</button>
+        </div>
+
+        <div class="content-area" id="quadro">
+            <p>Selecione uma tabela ao lado para consultar.</p>
+
+            <div id="sinais" class="table-box">
+                <h3>Sinais Vitais</h3>
+                <table>
+                    <tr><th>Sinal</th><th>Adulto Normal</th></tr>
+                    <tr><td>FC</td><td>60-100 bpm</td></tr>
+                    <tr><td>FR</td><td>12-20 irpm</td></tr>
+                    <tr><td>PA</td><td>< 120/80 mmHg</td></tr>
+                </table>
+            </div>
+
+            <div id="jelcos" class="table-box">
+                <h3>Calibres de Jelcos</h3>
+                <table>
+                    <tr><th>Cor</th><th>Calibre (G)</th></tr>
+                    <tr><td>Amarelo</td><td>24</td></tr>
+                    <tr><td>Azul</td><td>22</td></tr>
+                    <tr><td>Rosa</td><td>20</td></tr>
+                    <tr><td>Verde</td><td>18</td></tr>
+                </table>
+            </div>
+
+            <div id="imc" class="table-box">
+                <h3>Classificação IMC</h3>
+                <table>
+                    <tr><th>IMC</th><th>Classificação</th></tr>
+                    <tr><td>< 18.5</td><td>Abaixo</td></tr>
+                    <tr><td>18.5 - 24.9</td><td>Normal</td></tr>
+                    <tr><td>25 - 29.9</td><td>Sobrepeso</td></tr>
+                </table>
+            </div>
+
+            <div id="dor" class="table-box">
+                <h3>Escala de Dor (0-10)</h3>
+                <table>
+                    <tr><th>Nota</th><th>Intensidade</th></tr>
+                    <tr><td>0</td><td>Sem dor</td></tr>
+                    <tr><td>1-3</td><td>Leve</td></tr>
+                    <tr><td>4-7</td><td>Moderada</td></tr>
+                    <tr><td>8-10</td><td>Intensa</td></tr>
+                </table>
+            </div>
+
+            <div id="diluicao" class="table-box">
+                <h3>Diluição (Exemplos)</h3>
+                <table>
+                    <tr><th>Medicação</th><th>Diluente</th></tr>
+                    <tr><td>Dipirona</td><td>10ml AD</td></tr>
+                    <tr><td>Ranitidina</td><td>20ml AD</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function mostrar(id, btn) {
+            document.querySelectorAll('.table-box').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('btn-active'));
+            document.getElementById(id).style.display = 'block';
+            btn.classList.add('btn-active');
+            document.getElementById('quadro').querySelector('p').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
