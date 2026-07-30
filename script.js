@@ -492,14 +492,14 @@ function checkScrollingMazeCollisions() {
 function handlePlayerMovement() {
   if (keys['ArrowLeft'] || keys['KeyA']) {
     player.x -= player.speed;
-    if (tapTracker.left.isDoubleTap) {
+    if (tapTracker.left && tapTracker.left.isDoubleTap) {
       player.vAngle -= 0.04;
     }
   }
 
   if (keys['ArrowRight'] || keys['KeyD']) {
     player.x += player.speed;
-    if (tapTracker.right.isDoubleTap) {
+    if (tapTracker.right && tapTracker.right.isDoubleTap) {
       player.vAngle += 0.04;
     }
   }
@@ -509,6 +509,13 @@ function handlePlayerMovement() {
 
   if (keys['Space']) shoot();
   if (keys['KeyM'] || keys['ShiftLeft']) shootMissile();
+  
+  // Suporte à Tecla B (Bomba)
+  if (keys['KeyB']) {
+    if (typeof shootBomb === 'function') shootBomb();
+    else if (typeof useBomb === 'function') useBomb();
+    else if (typeof launchBomb === 'function') launchBomb();
+  }
 
   player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
   player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
@@ -761,7 +768,7 @@ function update() {
     }
   }
 
-  // Mísseis
+  // Mísseis (Guiados e Colisão)
   for (let i = missiles.length - 1; i >= 0; i--) {
     const m = missiles[i];
     let targetObj = boss.active ? boss : null;
@@ -776,25 +783,49 @@ function update() {
 
     if (targetObj) {
       const angle = Math.atan2((targetObj.y + targetObj.height / 2) - m.y, (targetObj.x + targetObj.width / 2) - m.x);
-      m.x += Math.cos(angle) * m.speed;
-      m.y += Math.sin(angle) * m.speed;
+      m.x += Math.cos(angle) * (m.speed || 6);
+      m.y += Math.sin(angle) * (m.speed || 6);
     } else {
-      m.y -= m.speed;
+      m.y -= (m.speed || 6);
     }
 
+    // Colisão Míssil x Boss
     if (boss.active && boss.invulnerableTimer <= 0 &&
         m.x < boss.x + boss.width &&
         m.x + m.width > boss.x &&
         m.y < boss.y + boss.height &&
         m.y + m.height > boss.y) {
-      boss.health -= m.damage;
+      boss.health -= (m.damage || 25);
       createExplosion(m.x, m.y);
       missiles.splice(i, 1);
       if (boss.health <= 0) handleBossDefeat();
       continue;
     }
 
-    if (m.y < 0 || m.x < 0 || m.x > canvas.width || m.y > canvas.height) missiles.splice(i, 1);
+    // --- CORREÇÃO DA COLISÃO: MÍSSIL X INIMIGOS COMUNS ---
+    let missileHit = false;
+    for (let eIndex = enemies.length - 1; eIndex >= 0; eIndex--) {
+      const enemy = enemies[eIndex];
+      if (
+        m.x < enemy.x + enemy.width &&
+        m.x + m.width > enemy.x &&
+        m.y < enemy.y + enemy.height &&
+        m.y + m.height > enemy.y
+      ) {
+        createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+        enemies.splice(eIndex, 1); // Destrói o inimigo
+        missiles.splice(i, 1);      // Destrói o míssil imediatamente!
+        gameState.score += 150;
+        gameState.kills++;
+        missileHit = true;
+        break;
+      }
+    }
+    if (missileHit) continue;
+
+    if (m.y < -20 || m.x < -20 || m.x > canvas.width + 20 || m.y > canvas.height + 20) {
+      missiles.splice(i, 1);
+    }
   }
 
   // Tiros Inimigos
@@ -912,7 +943,7 @@ function update() {
       p.y < player.y + player.height &&
       p.y + p.height > player.y
     ) {
-      playSound(audioBonus); // Som de Bônus tocado ao coletar!
+      playSound(audioBonus);
 
       if (p.type === 'HEALTH') player.health = Math.min(player.maxHealth, player.health + 15);
       if (p.type === 'RAPID_FIRE') gameState.rapidFireTimer = 300;
@@ -1310,51 +1341,51 @@ function gameLoop() {
 gameLoop();
 
 // ============================================================================
-// LOGICA DE COMANDOS VIRTUAIS + COMBOS SECRETOS (TOUCH MOBILE)
+// LOGICA DE COMANDOS VIRTUAIS + COMBOS SECRETOS CORRIGIDOS (TOUCH MOBILE)
 // ============================================================================
 
-// Sistema de Leitura do Buffer de Sequências (Combos Secretos)
 let inputHistory = [];
 let comboTimer = null;
 
 function checkSecretCombo(direction) {
   clearTimeout(comboTimer);
 
-  // Adiciona a direção pressionada ao histórico
   inputHistory.push(direction);
 
-  // Mantém apenas as últimas 3 entradas
   if (inputHistory.length > 3) {
     inputHistory.shift();
   }
 
   const comboPattern = inputHistory.join('-');
 
-  // COMBO 1: MÍSSIL (Dois toques para baixo, um para cima -> Down-Down-Up)
+  // COMBO 1: MÍSSIL (Baixo, Baixo, Cima)
   if (comboPattern === 'Down-Down-Up') {
+    if (typeof shootMissile === 'function') shootMissile();
     if (typeof keys !== 'undefined') {
       keys['KeyM'] = true;
-      setTimeout(() => { keys['KeyM'] = false; }, 100); // Disparo rápido
+      setTimeout(() => { keys['KeyM'] = false; }, 150);
     }
-    inputHistory = []; // Reseta o histórico após executar
+    inputHistory = [];
   }
   
-  // COMBO 2: BOMBA (Dois toques para cima, um para baixo -> Up-Up-Down)
+  // COMBO 2: BOMBA (Cima, Cima, Baixo)
   else if (comboPattern === 'Up-Up-Down') {
+    if (typeof shootBomb === 'function') shootBomb();
+    else if (typeof useBomb === 'function') useBomb();
+    else if (typeof launchBomb === 'function') launchBomb();
+
     if (typeof keys !== 'undefined') {
       keys['KeyB'] = true;
-      setTimeout(() => { keys['KeyB'] = false; }, 100); // Disparo rápido
+      setTimeout(() => { keys['KeyB'] = false; }, 150);
     }
-    inputHistory = []; // Reseta o histórico após executar
+    inputHistory = [];
   }
 
-  // Zera a sequência se o jogador demorar mais de 800ms entre os toques
   comboTimer = setTimeout(() => {
     inputHistory = [];
-  }, 800);
+  }, 1000);
 }
 
-// Mapeamento dinâmico dos botões com suporte aos combos
 function setupTouchButton(buttonId, keyCode, directionName = null) {
   const btn = document.getElementById(buttonId);
   if (!btn) return;
@@ -1365,7 +1396,6 @@ function setupTouchButton(buttonId, keyCode, directionName = null) {
       keys[keyCode] = true;
     }
 
-    // Se for um botão de direção, envia para a checagem do combo secreto
     if (directionName) {
       checkSecretCombo(directionName);
     }
@@ -1378,18 +1408,17 @@ function setupTouchButton(buttonId, keyCode, directionName = null) {
     }
   };
 
-  // Eventos para Celular (Touch) e PC (Mouse para testes)
   btn.addEventListener('touchstart', press, { passive: false });
   btn.addEventListener('touchend', release, { passive: false });
   btn.addEventListener('mousedown', press);
   btn.addEventListener('mouseup', release);
 }
 
-// Vincula os direcionais gravando seus nomes para os combos ('Up', 'Down', etc.)
+// Mapeamento dos botões com nome das direções
 setupTouchButton('btn-up', 'ArrowUp', 'Up');
 setupTouchButton('btn-down', 'ArrowDown', 'Down');
 setupTouchButton('btn-left', 'ArrowLeft', 'Left');
 setupTouchButton('btn-right', 'ArrowRight', 'Right');
 
-// Botão principal de Tiro
+// Botão de Tiro
 setupTouchButton('btn-shoot', 'Space');
