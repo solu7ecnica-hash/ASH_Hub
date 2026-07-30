@@ -11,9 +11,9 @@
   <div id="game-container">
     <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-    <!-- Camada dos Controles Virtuais por cima do Canvas -->
+    <!-- Camada de Controles Limpa -->
     <div id="touch-controls">
-      <!-- Direcionais D-Pad (Esquerda) -->
+      <!-- D-Pad Direcional (Esquerda) -->
       <div class="dpad">
         <button id="btn-up" class="dbtn">▲</button>
         <div class="dpad-row">
@@ -23,12 +23,8 @@
         <button id="btn-down" class="dbtn">▼</button>
       </div>
 
-      <!-- Botões de Ação (Direita) -->
+      <!-- Apenas o Botão de Tiro Principal (Direita) -->
       <div class="action-buttons">
-        <div class="sub-buttons">
-          <button id="btn-missile" class="act-btn mini-btn">MÍSSIL</button>
-          <button id="btn-bomb" class="act-btn mini-btn">BOMBA</button>
-        </div>
         <button id="btn-shoot" class="act-btn main-btn">FIRE</button>
       </div>
     </div>
