@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Star Fighter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- Camada dos Controles Virtuais por cima do Canvas -->
+    <div id="touch-controls">
+      <!-- Direcionais D-Pad (Esquerda) -->
+      <div class="dpad">
+        <button id="btn-up" class="dbtn">▲</button>
+        <div class="dpad-row">
+          <button id="btn-left" class="dbtn">◄</button>
+          <button id="btn-right" class="dbtn">►</button>
+        </div>
+        <button id="btn-down" class="dbtn">▼</button>
+      </div>
+
+      <!-- Botões de Ação (Direita) -->
+      <div class="action-buttons">
+        <div class="sub-buttons">
+          <button id="btn-missile" class="act-btn mini-btn">MÍSSIL</button>
+          <button id="btn-bomb" class="act-btn mini-btn">BOMBA</button>
+        </div>
+        <button id="btn-shoot" class="act-btn main-btn">FIRE</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
