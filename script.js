@@ -1310,11 +1310,52 @@ function gameLoop() {
 gameLoop();
 
 // ============================================================================
-// LOGICA DE COMANDOS VIRTUAIS (TOUCH MOBILE)
+// LOGICA DE COMANDOS VIRTUAIS + COMBOS SECRETOS (TOUCH MOBILE)
 // ============================================================================
 
-// Mapeamento dinâmico dos botões na tela para os eventos do teclado
-function setupTouchButton(buttonId, keyCode) {
+// Sistema de Leitura do Buffer de Sequências (Combos Secretos)
+let inputHistory = [];
+let comboTimer = null;
+
+function checkSecretCombo(direction) {
+  clearTimeout(comboTimer);
+
+  // Adiciona a direção pressionada ao histórico
+  inputHistory.push(direction);
+
+  // Mantém apenas as últimas 3 entradas
+  if (inputHistory.length > 3) {
+    inputHistory.shift();
+  }
+
+  const comboPattern = inputHistory.join('-');
+
+  // COMBO 1: MÍSSIL (Dois toques para baixo, um para cima -> Down-Down-Up)
+  if (comboPattern === 'Down-Down-Up') {
+    if (typeof keys !== 'undefined') {
+      keys['KeyM'] = true;
+      setTimeout(() => { keys['KeyM'] = false; }, 100); // Disparo rápido
+    }
+    inputHistory = []; // Reseta o histórico após executar
+  }
+  
+  // COMBO 2: BOMBA (Dois toques para cima, um para baixo -> Up-Up-Down)
+  else if (comboPattern === 'Up-Up-Down') {
+    if (typeof keys !== 'undefined') {
+      keys['KeyB'] = true;
+      setTimeout(() => { keys['KeyB'] = false; }, 100); // Disparo rápido
+    }
+    inputHistory = []; // Reseta o histórico após executar
+  }
+
+  // Zera a sequência se o jogador demorar mais de 800ms entre os toques
+  comboTimer = setTimeout(() => {
+    inputHistory = [];
+  }, 800);
+}
+
+// Mapeamento dinâmico dos botões com suporte aos combos
+function setupTouchButton(buttonId, keyCode, directionName = null) {
   const btn = document.getElementById(buttonId);
   if (!btn) return;
 
@@ -1322,6 +1363,11 @@ function setupTouchButton(buttonId, keyCode) {
     e.preventDefault();
     if (typeof keys !== 'undefined') {
       keys[keyCode] = true;
+    }
+
+    // Se for um botão de direção, envia para a checagem do combo secreto
+    if (directionName) {
+      checkSecretCombo(directionName);
     }
   };
 
@@ -1339,11 +1385,11 @@ function setupTouchButton(buttonId, keyCode) {
   btn.addEventListener('mouseup', release);
 }
 
-// Vincula os IDs do HTML às teclas correspondentes
-setupTouchButton('btn-up', 'ArrowUp');
-setupTouchButton('btn-down', 'ArrowDown');
-setupTouchButton('btn-left', 'ArrowLeft');
-setupTouchButton('btn-right', 'ArrowRight');
+// Vincula os direcionais gravando seus nomes para os combos ('Up', 'Down', etc.)
+setupTouchButton('btn-up', 'ArrowUp', 'Up');
+setupTouchButton('btn-down', 'ArrowDown', 'Down');
+setupTouchButton('btn-left', 'ArrowLeft', 'Left');
+setupTouchButton('btn-right', 'ArrowRight', 'Right');
+
+// Botão principal de Tiro
 setupTouchButton('btn-shoot', 'Space');
-setupTouchButton('btn-missile', 'KeyM');
-setupTouchButton('btn-bomb', 'KeyB');
