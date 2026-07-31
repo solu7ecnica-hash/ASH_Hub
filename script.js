@@ -203,8 +203,10 @@ const player = {
   lastShoot: 0,
   shootDelay: 180,
   bulletDamage: 10,
-  lastMissile: 0
+  lastMissile: 0,
 };
+
+
 
 function applyKnockback(forceX, forceY, spinForce) {
   player.vx += forceX;
@@ -517,9 +519,14 @@ function handlePlayerMovement() {
     else if (typeof launchBomb === 'function') launchBomb();
   }
 
+  // --- TRAVAS DE LIMITE DA TELA (CORRIGIDAS PARA O MOBILE) ---
+  const M_BOTOES = 160; // Margem reservada para o D-Pad / Botão FIRE 
+
   player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-  player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+  // Limita o Y para parar antes dos botões de controle:
+  player.y = Math.max(0, Math.min(canvas.height - player.height - M_BOTOES, player.y));
 }
+
 
 function update() {
   if (gameState.status === 'GAME_OVER' || gameState.status === 'VICTORY') return;
