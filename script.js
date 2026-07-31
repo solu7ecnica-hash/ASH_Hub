@@ -41,17 +41,38 @@ const imgBoss2 = new Image(); imgBoss2.src = 'centaury_2.png';
 const imgBoss3 = new Image(); imgBoss3.src = 'centaury_3.png';
 
 // ============================================================================
-// --- CARREGAMENTO DOS ÁUDIOS ---
+// --- CARREGAMENTO E GERENCIAMENTO DOS ÁUDIOS ---
 // ============================================================================
-const audioShoot = new Audio('til.mp3');
-const audioExplosion = new Audio('explosao.mp3');
-const audioMissile = new Audio('missil.mp3');
-const audioBonus = new Audio('bonus.mp3'); // SOm de Bônus / Power-up
+const audioShoot = new Audio('til.wav');
+const audioBum = new Audio('bum.wav');             // Explosão LEVE (Batedores)
+const audioExplosion = new Audio('explosao.wav');   // Explosão FORTE (Chefão)
+const audioMissile = new Audio('missil.wav');
+const audioBonus = new Audio('bonus.wav');
+
+// Ajuste de volumes
+audioShoot.volume = 0.3;
+audioBum.volume = 0.4;
+audioExplosion.volume = 0.8;
+audioMissile.volume = 0.4;
+audioBonus.volume = 0.5;
+
+// Pool de canais para sons rápidos e frequentes (evita criar e destruir clones na memória)
+const MAX_CANAL_AUDIO = 6;
+const audioChannels = Array.from({ length: MAX_CANAL_AUDIO }, () => new Audio());
+let currentChannel = 0;
 
 function playSound(audio) {
-  const soundClone = audio.cloneNode();
-  soundClone.volume = 0.5;
-  soundClone.play().catch(() => {});
+  if (!audio) return;
+
+  // Usa os canais reutilizáveis para não sobrecarregar o processador do celular
+  const channel = audioChannels[currentChannel];
+  channel.src = audio.src;
+  channel.volume = audio.volume;
+  channel.currentTime = 0; // Reseta o som para o início imediatamente
+  channel.play().catch(() => {});
+
+  // Avança para o próximo canal (revezamento)
+  currentChannel = (currentChannel + 1) % MAX_CANAL_AUDIO;
 }
 
 // ============================================================================
@@ -199,7 +220,7 @@ const player = {
   health: 100,
   maxHealth: 100,
   vx: 0, vy: 0, angle: 0, vAngle: 0,
-  speed: 9.0,
+  speed: 8.5,
   lastShoot: 0,
   shootDelay: 180,
   bulletDamage: 10,
@@ -414,7 +435,7 @@ function createSolidBubbleExplosion(x, y) {
 }
 
 function createExplosion(x, y) {
-  playSound(audioExplosion);
+  playSound(audioBum);
   for (let i = 0; i < 18; i++) {
     explosions.push({
       x: x, y: y,
