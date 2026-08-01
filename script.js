@@ -220,7 +220,7 @@ const player = {
   health: 100,
   maxHealth: 100,
   vx: 0, vy: 0, angle: 0, vAngle: 0,
-  speed: 8.5,
+  speed: 9.0,
   lastShoot: 0,
   shootDelay: 180,
   bulletDamage: 10,
@@ -357,7 +357,7 @@ function shootMissile() {
 
 function useBomb() {
   gameState.bombs--;
-  playSound(audioExplosion);
+  playSound(audioBum);
 
   for (let i = enemies.length - 1; i >= 0; i--) {
     createExplosion(enemies[i].x + enemies[i].width / 2, enemies[i].y + enemies[i].height / 2);
