@@ -61,12 +61,12 @@ canvas {
 
 .dpad-row {
   display: flex;
-  gap: 60px;
+  gap: 150px;
 }
 
 .dbtn {
-  width: 48px;
-  height: 30px;
+  width: 70px;
+  height: 45px;
   background: rgba(10, 25, 45, 0.65);
   border: 2px solid rgba(0, 240, 255, 0.5);
   border-radius: 8px;
