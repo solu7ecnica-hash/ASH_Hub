@@ -61,7 +61,7 @@ canvas {
 
 .dpad-row {
   display: flex;
-  gap: 75px;
+  gap: 65px;
 }
 
 .dbtn {
