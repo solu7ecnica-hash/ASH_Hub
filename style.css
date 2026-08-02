@@ -79,7 +79,7 @@ canvas {
 }
 
 .dbtn:active {
-  background: rgba(0, 240, 255, 0.5);
+  background: rgba(0, 240, 255, 0.4);
   transform: scale(0.92);
 }
 
