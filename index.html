@@ -18,6 +18,79 @@
         .calc-box { display: none; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         .resultado { font-weight: bold; color: #e67e22; font-size: 1.1rem; margin-top: 15px; }
+
+        /* Estilos da Tabela Glasgow Nativa */
+        .glasgow-container {
+            width: 100%;
+            max-width: 100%;
+            margin-top: 5px;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .glasgow-header {
+            background: #1e293b;
+            color: #ffffff;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .glasgow-subtitle {
+            background: #334155;
+            color: #cbd5e1;
+            text-align: center;
+            font-size: 0.68rem;
+            padding: 3px;
+            letter-spacing: 1px;
+        }
+        .glasgow-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .glasgow-table th {
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 8px 4px;
+            font-size: 0.7rem;
+            text-align: center;
+            border-bottom: 2px solid #cbd5e1;
+            border-right: 1px solid #e2e8f0;
+            width: 33.33%;
+        }
+        .glasgow-table th:last-child { border-right: none; }
+        .glasgow-table td {
+            padding: 7px 5px;
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            vertical-align: middle;
+            font-size: 0.75rem;
+        }
+        .glasgow-table td:last-child { border-right: none; }
+        .glasgow-table tr:last-child td { border-bottom: none; }
+        .col-text { color: #334155; font-weight: 500; }
+        .col-score { float: right; font-weight: bold; color: #0f172a; }
+        .empty-cell { color: #cbd5e1; text-align: center; display: block; }
+        .glasgow-footer {
+            background: #475569;
+            color: #ffffff;
+            text-align: center;
+            padding: 7px;
+            font-size: 0.72rem;
+            font-weight: 500;
+        }
+        .glasgow-description {
+            padding: 10px;
+            font-size: 0.75rem;
+            color: #475569;
+            line-height: 1.35;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+
         @media (max-width: 600px) { .main-container { flex-direction: column; } }
     </style>
 </head>
@@ -26,7 +99,7 @@
     <h1>Fórmulas Úteis</h1>
 
     <div class="main-container">
-        <!-- Sidebar agora com duas colunas -->
+        <!-- Sidebar com duas colunas -->
         <div class="sidebar">
             <div class="coluna">
                 <button onclick="mostrar('gotejamento', this)">Gotejamento</button>
@@ -111,11 +184,63 @@
                 <p id="resGesta" class="resultado"></p>
             </div>
 
-            <!-- Glasgow -->
+            <!-- Glasgow (Agora embutida nativa no app) -->
             <div id="glasgow" class="calc-box">
                 <h3>Escala de Glasgow</h3>
-                <p>Esta ferramenta é apenas para consulta rápida.</p>
-                <button onclick="window.open('https://pt.wikipedia.org/wiki/Escala_de_coma_de_Glasgow', '_blank')">Ver Critérios</button>
+                <div class="glasgow-container">
+                    <div class="glasgow-header">Escala de Coma de Glasgow</div>
+                    <div class="glasgow-subtitle">AVALIAÇÃO NEUROLÓGICA</div>
+                    
+                    <table class="glasgow-table">
+                        <thead>
+                            <tr>
+                                <th>Abertura Ocular</th>
+                                <th>Resposta Verbal</th>
+                                <th>Resposta Motora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="col-text">Espontânea</span> <span class="col-score">4</span></td>
+                                <td><span class="col-text">Orientado</span> <span class="col-score">5</span></td>
+                                <td><span class="col-text">Obedece</span> <span class="col-score">6</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="col-text">Ao chamado</span> <span class="col-score">3</span></td>
+                                <td><span class="col-text">Confuso</span> <span class="col-score">4</span></td>
+                                <td><span class="col-text">Localiza</span> <span class="col-score">5</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="col-text">À dor</span> <span class="col-score">2</span></td>
+                                <td><span class="col-text">Palavras</span> <span class="col-score">3</span></td>
+                                <td><span class="col-text">Flete</span> <span class="col-score">4</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="col-text">Ausente</span> <span class="col-score">1</span></td>
+                                <td><span class="col-text">Sons</span> <span class="col-score">2</span></td>
+                                <td><span class="col-text">Flexão Anormal</span> <span class="col-score">3</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="empty-cell">-</span></td>
+                                <td><span class="col-text">Ausente</span> <span class="col-score">1</span></td>
+                                <td><span class="col-text">Extensão</span> <span class="col-score">2</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="empty-cell">-</span></td>
+                                <td><span class="empty-cell">-</span></td>
+                                <td><span class="col-text">Ausente</span> <span class="col-score">1</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="glasgow-footer">
+                        Soma dos critérios avalia o nível consciência = 3 a 15
+                    </div>
+                    
+                    <div class="glasgow-description">
+                        A escala de coma de Glasgow permite de modo simples e padronizado quantificar o nível da consciência. Usando 3 critérios do exame neurológico: <strong>abertura ocular</strong>, <strong>resposta verbal</strong> e <strong>resposta motora</strong>.
+                    </div>
+                </div>
             </div>
         </div>
     </div>
