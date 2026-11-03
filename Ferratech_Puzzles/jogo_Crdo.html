@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quebra-Cabeça Deslizante com Revelação Limpa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h2 { margin-bottom: 5px; }
+        #info-container {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+        #puzzle-container {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 0px;
+            background: #444;
+            padding: 2px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            overflow: hidden;
+            position: relative;
+        }
+        .tile {
+            width: 100px;
+            height: 100px;
+            cursor: grab;
+            background-size: 300px 300px;
+            background-repeat: no-repeat;
+            box-sizing: border-box;
+            transition: opacity 1s ease-in-out;
+        }
+        .tile:active {
+            cursor: grabbing;
+        }
+        .empty {
+            background: #222;
+            cursor: default;
+        }
+        /* Contraste temporário nas bordas durante a revelação */
+        .temp-border {
+            border: 1px solid #28a745 !important;
+        }
+        /* Revelação suave e lenta da última peça */
+        .reveal-tile {
+            opacity: 0;
+            animation: fadeInPiece 1s forwards ease-in-out;
+        }
+        @keyframes fadeInPiece {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .botoes-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+        button.proximo { background-color: #28a745; }
+        button.proximo:hover { background-color: #218838; }
+
+        #proximo-container {
+            display: none;
+            margin-top: 15px;
+            text-align: center;
+        }
+        #proximo-container span {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Quebra-Cabeça Deslizante</h2>
+    <div id="info-container">
+        <span id="contador-imagem">Imagem 1 de 20</span>
+        <span id="cronometro">⏱️ Tempo: 0s</span>
+    </div>
+    
+    <div id="puzzle-container"></div>
+    
+    <div class="botoes-container">
+        <button onclick="embaralhar()">Embaralhar / Reiniciar</button>
+        <button class="proximo" id="btn-proximo" onclick="proximaImagem()" style="display: none;">Próxima Imagem ➔</button>
+    </div>
+
+    <div id="proximo-container">
+        <span id="mensagem-vitoria"></span>
+    </div>
+
+    <script>
+        const container = document.getElementById('puzzle-container');
+        const contadorTexto = document.getElementById('contador-imagem');
+        const cronometroTexto = document.getElementById('cronometro');
+        const btnProximo = document.getElementById('btn-proximo');
+        const mensagemVitoria = document.getElementById('mensagem-vitoria');
+        const size = 3;
+        let board = [];
+
+        const totalImagens = 20;
+        let imagemAtualIndex = 1;
+
+        let segundos = 0;
+        let timer = null;
+        let jogoAtivo = false;
+        let vitoriaConcluida = false;
+        let mostrarBordasTemp = false;
+
+        function tocarSomVitoria() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const notas = [523.25, 659.25, 783.99, 1046.50]; 
+                
+                notas.forEach((frequencia, index) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    
+                    osc.type = 'triangle';
+                    osc.frequency.value = frequencia;
+                    
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime + index * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + index * 0.12 + 0.3);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.start(ctx.currentTime + index * 0.12);
+                    osc.stop(ctx.currentTime + index * 0.12 + 0.3);
+                });
+            } catch (e) {
+                console.log("Áudio não suportado.");
+            }
+        }
+
+        function carregarImagemAtual() {
+            return `imagem${imagemAtualIndex}.jpg`;
+        }
+
+        function iniciarCronometro() {
+            pararCronometro();
+            segundos = 0;
+            cronometroTexto.innerText = `⏱️ Tempo: 0s`;
+            jogoAtivo = true;
+            timer = setInterval(() => {
+                if (jogoAtivo) {
+                    segundos++;
+                    cronometroTexto.innerText = `⏱️ Tempo: ${segundos}s`;
+                }
+            }, 1000);
+        }
+
+        function pararCronometro() {
+            jogoAtivo = false;
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        function criarTabuleiro() {
+            board = [...Array(size * size).keys()];
+            embaralhar();
+        }
+
+        function renderizar() {
+            container.innerHTML = '';
+            const imagemSrc = carregarImagemAtual();
+
+            board.forEach((val, index) => {
+                const tile = document.createElement('div');
+                tile.classList.add('tile');
+                tile.style.backgroundImage = `url('${imagemSrc}')`;
+                
+                if (val === size * size - 1) {
+                    if (vitoriaConcluida) {
+                         const x = (val % size) * 100;
+                         const y = Math.floor(val / size) * 100;
+                         tile.style.backgroundPosition = `-${x}px -${y}px`;
+                         tile.classList.add('reveal-tile');
+                         if (mostrarBordasTemp) {
+                             tile.classList.add('temp-border');
+                         }
+                    } else {
+                        tile.classList.add('empty');
+                        tile.style.backgroundImage = 'none';
+                        tile.setAttribute('data-index', index);
+                        
+                        tile.addEventListener('dragover', (e) => e.preventDefault());
+                        tile.addEventListener('drop', (e) => {
+                            e.preventDefault();
+                            const origemIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                            moverPeca(origemIndex);
+                        });
+                    }
+                } else {
+                    const x = (val % size) * 100;
+                    const y = Math.floor(val / size) * 100;
+                    tile.style.backgroundPosition = `-${x}px -${y}px`;
+                    
+                    if (!vitoriaConcluida) {
+                        tile.setAttribute('draggable', 'true');
+                        tile.setAttribute('data-index', index);
+
+                        tile.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.setData('text/plain', index);
+                        });
+
+                        tile.addEventListener('click', () => moverPeca(index));
+                    } else {
+                        if (mostrarBordasTemp) {
+                            tile.classList.add('temp-border');
+                        }
+                    }
+                }
+                container.appendChild(tile);
+            });
+
+            contadorTexto.innerText = `Imagem ${imagemAtualIndex} de ${totalImagens}`;
+        }
+
+        function moverPeca(index) {
+            if (!jogoAtivo || vitoriaConcluida) return;
+
+            const vazioIndex = board.indexOf(size * size - 1);
+            
+            const linhaPeca = Math.floor(index / size);
+            const colunaPeca = index % size;
+            const linhaVazio = Math.floor(vazioIndex / size);
+            const colunaVazio = vazioIndex % size;
+
+            const distancia = Math.abs(linhaPeca - linhaVazio) + Math.abs(colunaPeca - colunaVazio);
+
+            if (distancia === 1) {
+                board[vazioIndex] = board[index];
+                board[index] = size * size - 1;
+                renderizar();
+                verificarVitoria();
+            }
+        }
+
+        function embaralhar() {
+            vitoriaConcluida = false;
+            mostrarBordasTemp = false;
+            btnProximo.style.display = 'none';
+            mensagemVitoria.innerText = '';
+            
+            for (let i = 0; i < 100; i++) {
+                const vazioIndex = board.indexOf(size * size - 1);
+                const vizinhos = [];
+                const linhaVazio = Math.floor(vazioIndex / size);
+                const colunaVazio = vazioIndex % size;
+
+                if (linhaVazio > 0) vizinhos.push(vazioIndex - size);
+                if (linhaVazio < size - 1) vizinhos.push(vazioIndex + size);
+                if (colunaVazio > 0) vizinhos.push(vazioIndex - 1);
+                if (colunaVazio < size - 1) vizinhos.push(vazioIndex + 1);
+
+                const aleatorio = vizinhos[Math.floor(Math.random() * vizinhos.length)];
+                board[vazioIndex] = board[aleatorio];
+                board[aleatorio] = size * size - 1;
+            }
+            renderizar();
+            iniciarCronometro();
+        }
+
+        function proximaImagem() {
+            imagemAtualIndex++;
+            if (imagemAtualIndex > totalImagens) {
+                imagemAtualIndex = 1;
+            }
+            criarTabuleiro();
+        }
+
+        function verificarVitoria() {
+            const Vencido = board.every((val, i) => val === i);
+            if (Vencido) {
+                pararCronometro();
+                vitoriaConcluida = true;
+                
+                // 1. Toca o som e liga as bordas temporárias durante a animação de fade-in (1 segundo)
+                tocarSomVitoria();
+                mostrarBordasTemp = true;
+                renderizar();
+
+                // 2. Exatamente após 1 segundo (tempo que a animação da peça termina), desligamos as bordas
+                // e revelamos a imagem 100% limpa junto com a mensagem e o botão próximo!
+                setTimeout(() => {
+                    mostrarBordasTemp = false;
+                    renderizar();
+                    mensagemVitoria.innerText = `🎉 Concluído em ${segundos} segundos!`;
+                    btnProximo.style.display = 'inline-block';
+                }, 1000);
+            }
+        }
+
+        criarTabuleiro();
+    </script>
+</body>
+</html>
