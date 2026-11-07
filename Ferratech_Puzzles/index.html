@@ -141,27 +141,33 @@
         let mostrarBordasTemp = false;
         let telaVitoriaAtiva = false;
 
-        function tocarSomVitoria() {
+        function tocarSomVitoria(tipoFinal = false) {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 const ctx = new AudioContext();
-                const notas = [523.25, 659.25, 783.99, 1046.50]; 
                 
+                // Se for a vitória final do jogo, toca uma fanfarra mais longa e festiva
+                const notas = tipoFinal 
+                    ? [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50] // Dó - Mi - Sol - Dó(agudo) - Sol - Dó(agudo)
+                    : [523.25, 659.25, 783.99, 1046.50];                   // Padrão de fase
+                
+                const duracaoNota = tipoFinal ? 0.2 : 0.12;
+
                 notas.forEach((frequencia, index) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     
-                    osc.type = 'triangle';
+                    osc.type = tipoFinal ? 'square' : 'triangle';
                     osc.frequency.value = frequencia;
                     
-                    gain.gain.setValueAtTime(0.15, ctx.currentTime + index * 0.12);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + index * 0.12 + 0.3);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime + index * duracaoNota);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + index * duracaoNota + (tipoFinal ? 0.4 : 0.3));
                     
                     osc.connect(gain);
                     gain.connect(ctx.destination);
                     
-                    osc.start(ctx.currentTime + index * 0.12);
-                    osc.stop(ctx.currentTime + index * 0.12 + 0.3);
+                    osc.start(ctx.currentTime + index * duracaoNota);
+                    osc.stop(ctx.currentTime + index * duracaoNota + (tipoFinal ? 0.4 : 0.3));
                 });
             } catch (e) {
                 console.log("Áudio não suportado.");
@@ -169,7 +175,7 @@
         }
 
         function carregarImagemAtual() {
-            return `imagem ${imagemAtualIndex}.jpg`;
+            return `imagem${imagemAtualIndex}.jpg`;
         }
 
         function iniciarCronometro() {
@@ -320,13 +326,15 @@
             btnEmbaralhar.style.display = "none";
             btnProximo.style.display = "none";
             
-            // Exibe a tela final (tela_final.jpg) cobrindo o grid do puzzle inteira ou como imagem única de vitória
+            // Toca o som épico de conquista ao abrir a tela final
+            tocarSomVitoria(true);
+
+            // Exibe a tela final (tela_final.jpg)
             container.innerHTML = `<div style="width: 300px; height: 300px; background-image: url('tela_final.jpg'); background-size: cover; background-position: center; border-radius: 6px;"></div>`;
             
             mensagemVitoria.innerText = `🏆 Você concluiu todos os 22 desafios com sucesso!`;
             document.getElementById('proximo-container').style.display = 'block';
 
-            // Altera os botões inferiores para Reiniciar e Sair
             botoesContainer.innerHTML = `
                 <button onclick="reiniciarJogoTotal()">Reiniciar Jogo</button>
                 <button class="sair" onclick="sairDoJogo()">Sair</button>
@@ -340,7 +348,6 @@
                 <button id="btn-embaralhar" onclick="embaralhar()">Embaralhar</button>
                 <button class="proximo" id="btn-proximo" onclick="proximaImagem()" style="display: none;">Próxima Imagem ➔</button>
             `;
-            // Recaptura as referências após recriar o HTML dos botões
             window.btnProximo = document.getElementById('btn-proximo');
             window.btnEmbaralhar = document.getElementById('btn-embaralhar');
             criarTabuleiro();
@@ -357,7 +364,11 @@
                 pararCronometro();
                 vitoriaConcluida = true;
                 
-                tocarSomVitoria();
+                const eUltimaImagem = (imagemAtualIndex >= totalImagens);
+                
+                // Toca o som de vitória correspondente (normal ou épico para a última imagem)
+                tocarSomVitoria(eUltimaImagem);
+                
                 mostrarBordasTemp = true;
                 renderizar();
 
@@ -366,8 +377,7 @@
                     renderizar();
                     mensagemVitoria.innerText = `🎉 Concluído em ${segundos} segundos!`;
                     
-                    if (imagemAtualIndex >= totalImagens) {
-                        // Se for a imagem 22 (última), aguarda 3 segundos visível e vai pra tela final!
+                    if (eUltimaImagem) {
                         setTimeout(() => {
                             mostrarTelaVitoriaFinal();
                         }, 3000);
