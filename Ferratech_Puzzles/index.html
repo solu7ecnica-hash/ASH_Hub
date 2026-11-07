@@ -53,11 +53,9 @@
             background: #222;
             cursor: default;
         }
-        /* Contraste temporário nas bordas durante a revelação */
         .temp-border {
             border: 1px solid #28a745 !important;
         }
-        /* Revelação suave e lenta da última peça */
         .reveal-tile {
             opacity: 0;
             animation: fadeInPiece 1s forwards ease-in-out;
@@ -83,6 +81,8 @@
         button:hover { background-color: #0056b3; }
         button.proximo { background-color: #28a745; }
         button.proximo:hover { background-color: #218838; }
+        button.sair { background-color: #dc3545; }
+        button.sair:hover { background-color: #c82333; }
 
         #proximo-container {
             display: none;
@@ -100,16 +100,16 @@
 </head>
 <body>
 
-    <h2>FERRATECH PUZZLES</h2>
+    <h2 id="titulo-topo">FERRATECH PUZZLES</h2>
     <div id="info-container">
-        <span id="contador-imagem">Imagem 1 de 20</span>
+        <span id="contador-imagem">Imagem 1 de 22</span>
         <span id="cronometro">⏱️ Tempo: 0s</span>
     </div>
     
     <div id="puzzle-container"></div>
     
     <div class="botoes-container">
-        <button onclick="embaralhar()">Embaralhar</button>
+        <button id="btn-embaralhar" onclick="embaralhar()">Embaralhar</button>
         <button class="proximo" id="btn-proximo" onclick="proximaImagem()" style="display: none;">Próxima Imagem ➔</button>
     </div>
 
@@ -122,11 +122,16 @@
         const contadorTexto = document.getElementById('contador-imagem');
         const cronometroTexto = document.getElementById('cronometro');
         const btnProximo = document.getElementById('btn-proximo');
+        const btnEmbaralhar = document.getElementById('btn-embaralhar');
         const mensagemVitoria = document.getElementById('mensagem-vitoria');
+        const tituloTopo = document.getElementById('titulo-topo');
+        const infoContainer = document.getElementById('info-container');
+        const botoesContainer = document.querySelector('.botoes-container');
+
         const size = 3;
         let board = [];
 
-        const totalImagens = 20;
+        const totalImagens = 22;
         let imagemAtualIndex = 1;
 
         let segundos = 0;
@@ -134,6 +139,7 @@
         let jogoAtivo = false;
         let vitoriaConcluida = false;
         let mostrarBordasTemp = false;
+        let telaVitoriaAtiva = false;
 
         function tocarSomVitoria() {
             try {
@@ -163,7 +169,7 @@
         }
 
         function carregarImagemAtual() {
-            return `imagem${imagemAtualIndex}.jpg`;
+            return `imagem ${imagemAtualIndex}.jpg`;
         }
 
         function iniciarCronometro() {
@@ -188,6 +194,11 @@
         }
 
         function criarTabuleiro() {
+            telaVitoriaAtiva = false;
+            tituloTopo.innerText = "FERRATECH PUZZLES";
+            infoContainer.style.display = "flex";
+            btnEmbaralhar.style.display = "inline-block";
+            
             board = [...Array(size * size).keys()];
             embaralhar();
         }
@@ -249,7 +260,7 @@
         }
 
         function moverPeca(index) {
-            if (!jogoAtivo || vitoriaConcluida) return;
+            if (!jogoAtivo || vitoriaConcluida || telaVitoriaAtiva) return;
 
             const vazioIndex = board.indexOf(size * size - 1);
             
@@ -269,6 +280,7 @@
         }
 
         function embaralhar() {
+            if (telaVitoriaAtiva) return;
             vitoriaConcluida = false;
             mostrarBordasTemp = false;
             btnProximo.style.display = 'none';
@@ -294,11 +306,49 @@
         }
 
         function proximaImagem() {
-            imagemAtualIndex++;
-            if (imagemAtualIndex > totalImagens) {
-                imagemAtualIndex = 1;
+            if (imagemAtualIndex < totalImagens) {
+                imagemAtualIndex++;
+                criarTabuleiro();
             }
+        }
+
+        function mostrarTelaVitoriaFinal() {
+            telaVitoriaAtiva = true;
+            pararCronometro();
+            tituloTopo.innerText = "PARABÉNS, MAURO!";
+            infoContainer.style.display = "none";
+            btnEmbaralhar.style.display = "none";
+            btnProximo.style.display = "none";
+            
+            // Exibe a tela final (tela_final.jpg) cobrindo o grid do puzzle inteira ou como imagem única de vitória
+            container.innerHTML = `<div style="width: 300px; height: 300px; background-image: url('tela_final.jpg'); background-size: cover; background-position: center; border-radius: 6px;"></div>`;
+            
+            mensagemVitoria.innerText = `🏆 Você concluiu todos os 22 desafios com sucesso!`;
+            document.getElementById('proximo-container').style.display = 'block';
+
+            // Altera os botões inferiores para Reiniciar e Sair
+            botoesContainer.innerHTML = `
+                <button onclick="reiniciarJogoTotal()">Reiniciar Jogo</button>
+                <button class="sair" onclick="sairDoJogo()">Sair</button>
+            `;
+        }
+
+        function reiniciarJogoTotal() {
+            imagemAtualIndex = 1;
+            document.getElementById('proximo-container').style.display = 'none';
+            botoesContainer.innerHTML = `
+                <button id="btn-embaralhar" onclick="embaralhar()">Embaralhar</button>
+                <button class="proximo" id="btn-proximo" onclick="proximaImagem()" style="display: none;">Próxima Imagem ➔</button>
+            `;
+            // Recaptura as referências após recriar o HTML dos botões
+            window.btnProximo = document.getElementById('btn-proximo');
+            window.btnEmbaralhar = document.getElementById('btn-embaralhar');
             criarTabuleiro();
+        }
+
+        function sairDoJogo() {
+            alert("Obrigado por jogar Ferratech Puzzles!");
+            window.close();
         }
 
         function verificarVitoria() {
@@ -307,18 +357,23 @@
                 pararCronometro();
                 vitoriaConcluida = true;
                 
-                // 1. Toca o som e liga as bordas temporárias durante a animação de fade-in (1 segundo)
                 tocarSomVitoria();
                 mostrarBordasTemp = true;
                 renderizar();
 
-                // 2. Exatamente após 1 segundo (tempo que a animação da peça termina), desligamos as bordas
-                // e revelamos a imagem 100% limpa junto com a mensagem e o botão próximo!
                 setTimeout(() => {
                     mostrarBordasTemp = false;
                     renderizar();
                     mensagemVitoria.innerText = `🎉 Concluído em ${segundos} segundos!`;
-                    btnProximo.style.display = 'inline-block';
+                    
+                    if (imagemAtualIndex >= totalImagens) {
+                        // Se for a imagem 22 (última), aguarda 3 segundos visível e vai pra tela final!
+                        setTimeout(() => {
+                            mostrarTelaVitoriaFinal();
+                        }, 3000);
+                    } else {
+                        btnProximo.style.display = 'inline-block';
+                    }
                 }, 1000);
             }
         }
