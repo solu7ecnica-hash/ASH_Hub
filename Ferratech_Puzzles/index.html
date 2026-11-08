@@ -13,11 +13,84 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            overflow-x: hidden;
             position: relative;
         }
-        h2 { margin-bottom: 5px; }
+        h2 { margin: 5px 0; font-size: 20px; }
+        
+        /* Botão Configurar Desafio */
+        #btn-config {
+            background-color: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        #btn-config:hover { background-color: #444; color: #fff; }
+
+        /* Modal de Configuração */
+        #modal-config {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            width: 280px;
+            text-align: center;
+            border: 1px solid #444;
+        }
+        .modal-content h3 { margin-top: 0; color: #28a745; }
+        .config-group {
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        /* Estilo do Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-toggle {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider-toggle:before {
+            position: absolute; content: "";
+            height: 16px; width: 16px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider-toggle { background-color: #28a745; }
+        input:checked + .slider-toggle:before { transform: translateX(26px); }
+
+        select {
+            background: #333; color: white; border: 1px solid #555;
+            padding: 5px; border-radius: 4px; font-size: 14px;
+        }
+
         #info-container {
             display: flex;
             justify-content: space-between;
@@ -47,16 +120,9 @@
             box-sizing: border-box;
             transition: opacity 1s ease-in-out;
         }
-        .tile:active {
-            cursor: grabbing;
-        }
-        .empty {
-            background: #222;
-            cursor: default;
-        }
-        .temp-border {
-            border: 1px solid #28a745 !important;
-        }
+        .tile:active { cursor: grabbing; }
+        .empty { background: #222; cursor: default; }
+        .temp-border { border: 1px solid #28a745 !important; }
         .reveal-tile {
             opacity: 0;
             animation: fadeInPiece 1s forwards ease-in-out;
@@ -82,6 +148,8 @@
         button:hover { background-color: #0056b3; }
         button.proximo { background-color: #28a745; }
         button.proximo:hover { background-color: #218838; }
+        button.sair { background-color: #dc3545; }
+        button.sair:hover { background-color: #c82333; }
 
         #proximo-container {
             display: none;
@@ -96,14 +164,11 @@
             font-weight: bold;
         }
 
-        /* Sistema de Alerta Nativo Simulado */
+        /* Sistema de Alerta Nativo Simulado (Limpo, sem URL) */
         #custom-alert-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.7);
             z-index: 9999;
             justify-content: center;
@@ -145,23 +210,23 @@
             font-size: 14px;
             font-weight: bold;
         }
-        #custom-alert-btn:hover {
-            background-color: #0056b3;
-        }
+        #custom-alert-btn:hover { background-color: #0056b3; }
     </style>
 </head>
 <body>
 
-    <h2>FERRATECH PUZZLES</h2>
+    <button id="btn-config" onclick="abrirConfig()">⚙️ Configurar Desafio</button>
+    <h2 id="titulo-topo">FERRATECH PUZZLES</h2>
+    
     <div id="info-container">
-        <span id="contador-imagem">Imagem 1 de 20</span>
+        <span id="contador-imagem">Imagem 1 de 23</span>
         <span id="cronometro">⏱️ Tempo: 0s</span>
     </div>
     
     <div id="puzzle-container"></div>
     
     <div class="botoes-container">
-        <button onclick="embaralhar()">Embaralhar</button>
+        <button id="btn-embaralhar" onclick="embaralhar()">Embaralhar</button>
         <button class="proximo" id="btn-proximo" onclick="proximaImagem()" style="display: none;">Próxima Imagem ➔</button>
     </div>
 
@@ -169,7 +234,7 @@
         <span id="mensagem-vitoria"></span>
     </div>
 
-    <!-- Sistema de Alerta Nativo Simulado -->
+    <!-- Alerta Personalizado -->
     <div id="custom-alert-overlay">
         <div id="custom-alert-box">
             <div id="custom-alert-header">FERRATECH PUZZLES</div>
@@ -180,75 +245,146 @@
         </div>
     </div>
 
+    <!-- Modal de Configuração -->
+    <div id="modal-config">
+        <div class="modal-content">
+            <h3>Configurar Desafio</h3>
+            <div class="config-group">
+                <span>Modo Desafio:</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="status-modo" style="font-size: 12px; color: #aaa;">Livre</span>
+                    <label class="switch">
+                        <input type="checkbox" id="check-desafio" onchange="atualizarModoDesafio()">
+                        <span class="slider-toggle"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="config-group">
+                <span>Tempo Limite:</span>
+                <select id="select-tempo" onchange="mudarTempoLimite()">
+                    <option value="15">15 segundos</option>
+                    <option value="30" selected>30 segundos</option>
+                    <option value="45">45 segundos</option>
+                    <option value="60">60 segundos</option>
+                    <option value="90">90 segundos</option>
+                </select>
+            </div>
+            <button onclick="fecharConfig()" style="margin-top: 10px; width: 100%;">Salvar e Jogar</button>
+        </div>
+    </div>
+
     <script>
         const container = document.getElementById('puzzle-container');
         const contadorTexto = document.getElementById('contador-imagem');
         const cronometroTexto = document.getElementById('cronometro');
         const btnProximo = document.getElementById('btn-proximo');
+        const btnEmbaralhar = document.getElementById('btn-embaralhar');
         const mensagemVitoria = document.getElementById('mensagem-vitoria');
+        const tituloTexto = document.getElementById('titulo-topo');
+        const infoContainer = document.getElementById('info-container');
+        const botoesContainer = document.querySelector('.botoes-container');
+        const btnConfig = document.getElementById('btn-config');
+        const modalConfig = document.getElementById('modal-config');
+        const checkDesafio = document.getElementById('check-desafio');
+        const statusModo = document.getElementById('status-modo');
+        const selectTempo = document.getElementById('select-tempo');
         
-        // Referências do Alerta Personalizado
         const alertaOverlay = document.getElementById('custom-alert-overlay');
         const alertaBtn = document.getElementById('custom-alert-btn');
 
         const size = 3;
         let board = [];
 
-        const totalImagens = 20;
+        const totalImagens = 23;
         let imagemAtualIndex = 1;
 
         let segundos = 0;
+        let tempoRestante = 30;
         let timer = null;
         let jogoAtivo = false;
         let vitoriaConcluida = false;
         let mostrarBordasTemp = false;
+        let telaVitoriaAtiva = false;
+        
+        let modoDesafioAtivado = false;
+        let limiteTempoConfigurado = 30;
 
-        function tocarSomVitoria() {
-            try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContext();
-                const notas = [523.25, 659.25, 783.99, 1046.50]; 
-                
-                notas.forEach((frequencia, index) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    
-                    osc.type = 'triangle';
-                    osc.frequency.value = frequencia;
-                    
-                    gain.gain.setValueAtTime(0.15, ctx.currentTime + index * 0.12);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + index * 0.12 + 0.3);
-                    
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    
-                    osc.start(ctx.currentTime + index * 0.12);
-                    osc.stop(ctx.currentTime + index * 0.12 + 0.3);
-                });
-            } catch (e) {
-                console.log("Áudio não suportado.");
+        function abrirConfig() { modalConfig.style.display = 'flex'; }
+        function fecharConfig() { modalConfig.style.display = 'none'; }
+
+        function atualizarModoDesafio() {
+            modoDesafioAtivado = checkDesafio.checked;
+            if (modoDesafioAtivado) {
+                statusModo.innerText = "Ativado";
+                statusModo.style.color = "#28a745";
+                statusModo.style.fontWeight = "bold";
+            } else {
+                statusModo.innerText = "Livre";
+                statusModo.style.color = "#aaa";
+                statusModo.style.fontWeight = "normal";
             }
+            embaralhar();
         }
 
-        // --- SISTEMA DE ALERTA NATIVO SIMULADO ---
+        function mudarTempoLimite() {
+            limiteTempoConfigurado = parseInt(selectTempo.value);
+            embaralhar();
+        }
+
         function exibirAlertaPersonalizado() {
-            // Toca o som de alarme (se configurado) antes de mostrar
-            tocarSomVitoria(); // Usando som padrão para teste
             alertaOverlay.style.display = 'flex';
-            alertaBtn.focus(); // Foca o botão OK para aceitar ENTER
-            jogoAtivo = false; // Pausa o jogo
+            alertaBtn.focus();
+            jogoAtivo = false;
         }
 
         function fecharAlertaPersonalizado() {
             alertaOverlay.style.display = 'none';
-            jogoAtivo = true; // Retoma o jogo
-            // Chamar embaralhar() é responsabilidade de quem chamou o alerta,
-            // mas nós configuramos para reembaralhar NO FECHAMENTO, 
-            // como um fluxo de erro nativo.
-            if (vitoriaConcluida) return; // Se venceu, não reembaralha
-            embaralhar(); 
+            jogoAtivo = true;
+            if (vitoriaConcluida) return;
+            embaralhar();
         }
-        // --- --- --- --- ---
+
+        function tocarSomVitoria(tipoFinal = false) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const notas = tipoFinal 
+                    ? [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50]
+                    : [523.25, 659.25, 783.99, 1046.50];
+                const duracaoNota = tipoFinal ? 0.2 : 0.12;
+
+                notas.forEach((frequencia, index) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = tipoFinal ? 'square' : 'triangle';
+                    osc.frequency.value = frequencia;
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime + index * duracaoNota);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + index * duracaoNota + (tipoFinal ? 0.4 : 0.3));
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + index * duracaoNota);
+                    osc.stop(ctx.currentTime + index * duracaoNota + (tipoFinal ? 0.4 : 0.3));
+                });
+            } catch (e) { console.log("Áudio não suportado."); }
+        }
+
+        function tocarSomAlarme() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, ctx.currentTime);
+                osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+            } catch (e) {}
+        }
 
         function carregarImagemAtual() {
             return `imagem${imagemAtualIndex}.jpg`;
@@ -257,18 +393,30 @@
         function iniciarCronometro() {
             pararCronometro();
             segundos = 0;
-            cronometroTexto.innerText = `⏱️ Tempo: 0s`;
+            tempoRestante = limiteTempoConfigurado;
+            
+            if (modoDesafioAtivado) {
+                cronometroTexto.innerText = `⏱️ Tempo: ${segundos}s (Restam: ${tempoRestante}s)`;
+            } else {
+                cronometroTexto.innerText = `⏱️ Tempo: ${segundos}s (Livre)`;
+            }
+
             jogoAtivo = true;
             timer = setInterval(() => {
                 if (jogoAtivo) {
                     segundos++;
-                    cronometroTexto.innerText = `⏱️ Tempo: ${segundos}s`;
-                    
-                    // Exemplo de tempo esgotado: reembaralhar aos 60s
-                    // if (segundos >= 60 && !vitoriaConcluida) {
-                    //    pararCronometro();
-                    //    exibirAlertaPersonalizado(); // Exibe o alerta limpo
-                    // }
+                    if (modoDesafioAtivado) {
+                        tempoRestante--;
+                        cronometroTexto.innerText = `⏱️ Tempo: ${segundos}s (Restam: ${tempoRestante}s)`;
+                        
+                        if (tempoRestante <= 0) {
+                            pararCronometro();
+                            tocarSomAlarme();
+                            exibirAlertaPersonalizado();
+                        }
+                    } else {
+                        cronometroTexto.innerText = `⏱️ Tempo: ${segundos}s (Livre)`;
+                    }
                 }
             }, 1000);
         }
@@ -282,11 +430,28 @@
         }
 
         function criarTabuleiro() {
+            telaVitoriaAtiva = false;
+            btnConfig.style.display = "block";
+            tituloTexto.innerText = "FERRATECH PUZZLES";
+            infoContainer.style.display = "flex";
+            btnEmbaralhar.style.display = "inline-block";
+            
+            container.style.display = "grid";
+            container.style.width = "auto";
+            container.style.height = "auto";
+            container.style.maxWidth = "none";
+            container.style.maxHeight = "none";
+            container.style.border = "none";
+            container.style.borderRadius = "8px";
+            container.style.background = "#444";
+            container.style.boxShadow = "0 8px 16px rgba(0,0,0,0.5)";
+
             board = [...Array(size * size).keys()];
             embaralhar();
         }
 
         function renderizar() {
+            if (telaVitoriaAtiva) return;
             container.innerHTML = '';
             const imagemSrc = carregarImagemAtual();
 
@@ -321,4 +486,157 @@
                     const y = Math.floor(val / size) * 100;
                     tile.style.backgroundPosition = `-${x}px -${y}px`;
                     
-                    if (!vitoriaConcluida
+                    if (!vitoriaConcluida) {
+                        tile.setAttribute('draggable', 'true');
+                        tile.setAttribute('data-index', index);
+
+                        tile.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.setData('text/plain', index);
+                        });
+
+                        tile.addEventListener('click', () => moverPeca(index));
+                    } else {
+                        if (mostrarBordasTemp) {
+                            tile.classList.add('temp-border');
+                        }
+                    }
+                }
+                container.appendChild(tile);
+            });
+
+            contadorTexto.innerText = `Imagem ${imagemAtualIndex} de ${totalImagens}`;
+        }
+
+        function moverPeca(index) {
+            if (!jogoAtivo || vitoriaConcluida || telaVitoriaAtiva) return;
+
+            const vazioIndex = board.indexOf(size * size - 1);
+            
+            const linhaPeca = Math.floor(index / size);
+            const colunaPeca = index % size;
+            const linhaVazio = Math.floor(vazioIndex / size);
+            const colunaVazio = vazioIndex % size;
+
+            const distancia = Math.abs(linhaPeca - linhaVazio) + Math.abs(colunaPeca - colunaVazio);
+
+            if (distancia === 1) {
+                board[vazioIndex] = board[index];
+                board[index] = size * size - 1;
+                renderizar();
+                verificarVitoria();
+            }
+        }
+
+        function embaralhar() {
+            if (telaVitoriaAtiva) return;
+            vitoriaConcluida = false;
+            mostrarBordasTemp = false;
+            btnProximo.style.display = 'none';
+            mensagemVitoria.innerText = '';
+            
+            for (let i = 0; i < 100; i++) {
+                const vazioIndex = board.indexOf(size * size - 1);
+                const vizinhos = [];
+                const linhaVazio = Math.floor(vazioIndex / size);
+                const colunaVazio = vazioIndex % size;
+
+                if (linhaVazio > 0) vizinhos.push(vazioIndex - size);
+                if (linhaVazio < size - 1) vizinhos.push(vazioIndex + size);
+                if (colunaVazio > 0) vizinhos.push(vazioIndex - 1);
+                if (colunaVazio < size - 1) vizinhos.push(vazioIndex + 1);
+
+                const aleatorio = vizinhos[Math.floor(Math.random() * vizinhos.length)];
+                board[vazioIndex] = board[aleatorio];
+                board[aleatorio] = size * size - 1;
+            }
+            renderizar();
+            iniciarCronometro();
+        }
+
+        function proximaImagem() {
+            if (imagemAtualIndex < totalImagens) {
+                imagemAtualIndex++;
+                criarTabuleiro();
+            }
+        }
+
+        function mostrarTelaVitoriaFinal() {
+            telaVitoriaAtiva = true;
+            pararCronometro();
+            btnConfig.style.display = "none";
+            tituloTexto.innerText = "PARABÉNS, MAURO!";
+            infoContainer.style.display = "none";
+            btnEmbaralhar.style.display = "none";
+            btnProximo.style.display = "none";
+            
+            tocarSomVitoria(true);
+
+            container.style.display = "block";
+            container.style.width = "100vw";
+            container.style.height = "100vh";
+            container.style.maxWidth = "480px";
+            container.style.maxHeight = "85vh";
+            container.style.borderRadius = "0px";
+            container.style.background = "none";
+            container.style.boxShadow = "none";
+
+            container.innerHTML = `<div style="width: 100%; height: 100%; background-image: url('tela_final.jpg'); background-size: cover; background-position: center;"></div>`;
+            
+            mensagemVitoria.innerText = `🏆 Você concluiu todos os 23 desafios com sucesso!`;
+            document.getElementById('proximo-container').style.display = 'block';
+
+            botoesContainer.innerHTML = `
+                <button onclick="reiniciarJogoTotal()">Reiniciar Jogo</button>
+                <button class="sair" onclick="sairDoJogo()">Sair</button>
+            `;
+        }
+
+        function reiniciarJogoTotal() {
+            imagemAtualIndex = 1;
+            document.getElementById('proximo-container').style.display = 'none';
+            botoesContainer.innerHTML = `
+                <button id="btn-embaralhar" onclick="embaralhar()">Embaralhar</button>
+                <button class="proximo" id="btn-proximo" onclick="proximaImagem()" style="display: none;">Próxima Imagem ➔</button>
+            `;
+            window.btnProximo = document.getElementById('btn-proximo');
+            window.btnEmbaralhar = document.getElementById('btn-embaralhar');
+            criarTabuleiro();
+        }
+
+        function sairDoJogo() {
+            alert("Obrigado por jogar Ferratech Puzzles!");
+            window.close();
+        }
+
+        function verificarVitoria() {
+            const Vencido = board.every((val, i) => val === i);
+            if (Vencido) {
+                pararCronometro();
+                vitoriaConcluida = true;
+                
+                const eUltimaImagem = (imagemAtualIndex >= totalImagens);
+                tocarSomVitoria(eUltimaImagem);
+                
+                mostrarBordasTemp = true;
+                renderizar();
+
+                setTimeout(() => {
+                    mostrarBordasTemp = false;
+                    renderizar();
+                    mensagemVitoria.innerText = `🎉 Concluído em ${segundos} segundos!`;
+                    
+                    if (eUltimaImagem) {
+                        setTimeout(() => {
+                            mostrarTelaVitoriaFinal();
+                        }, 3000);
+                    } else {
+                        btnProximo.style.display = 'inline-block';
+                    }
+                }, 1000);
+            }
+        }
+
+        criarTabuleiro();
+    </script>
+</body>
+</html>
