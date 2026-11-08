@@ -13,8 +13,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            overflow-x: hidden;
         }
         h2 { margin-bottom: 5px; }
         #info-container {
@@ -102,7 +103,7 @@
 
     <h2 id="titulo-topo">FERRATECH PUZZLES</h2>
     <div id="info-container">
-        <span id="contador-imagem">Imagem 1 de 22</span>
+        <span id="contador-imagem">Imagem 1 de 23</span>
         <span id="cronometro">⏱️ Tempo: 0s</span>
     </div>
     
@@ -124,14 +125,14 @@
         const btnProximo = document.getElementById('btn-proximo');
         const btnEmbaralhar = document.getElementById('btn-embaralhar');
         const mensagemVitoria = document.getElementById('mensagem-vitoria');
-        const tituloTopo = document.getElementById('titulo-topo');
+        const tituloTexto = document.getElementById('titulo-topo');
         const infoContainer = document.getElementById('info-container');
         const botoesContainer = document.querySelector('.botoes-container');
 
         const size = 3;
         let board = [];
 
-        const totalImagens = 22;
+        const totalImagens = 23;
         let imagemAtualIndex = 1;
 
         let segundos = 0;
@@ -146,10 +147,9 @@
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 const ctx = new AudioContext();
                 
-                // Se for a vitória final do jogo, toca uma fanfarra mais longa e festiva
                 const notas = tipoFinal 
-                    ? [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50] // Dó - Mi - Sol - Dó(agudo) - Sol - Dó(agudo)
-                    : [523.25, 659.25, 783.99, 1046.50];                   // Padrão de fase
+                    ? [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50]
+                    : [523.25, 659.25, 783.99, 1046.50];
                 
                 const duracaoNota = tipoFinal ? 0.2 : 0.12;
 
@@ -201,15 +201,23 @@
 
         function criarTabuleiro() {
             telaVitoriaAtiva = false;
-            tituloTopo.innerText = "FERRATECH PUZZLES";
+            tituloTexto.innerText = "FERRATECH PUZZLES";
             infoContainer.style.display = "flex";
             btnEmbaralhar.style.display = "inline-block";
             
+            // Restaura o estilo padrão do container do puzzle caso venha da tela final
+            container.style.display = "grid";
+            container.style.width = "auto";
+            container.style.height = "auto";
+            container.style.border = "none";
+            container.style.borderRadius = "8px";
+
             board = [...Array(size * size).keys()];
             embaralhar();
         }
 
         function renderizar() {
+            if (telaVitoriaAtiva) return;
             container.innerHTML = '';
             const imagemSrc = carregarImagemAtual();
 
@@ -321,7 +329,7 @@
         function mostrarTelaVitoriaFinal() {
             telaVitoriaAtiva = true;
             pararCronometro();
-            tituloTopo.innerText = "PARABÉNS, MAURO!";
+            tituloTexto.innerText = "PARABÉNS, MAURO!";
             infoContainer.style.display = "none";
             btnEmbaralhar.style.display = "none";
             btnProximo.style.display = "none";
@@ -329,10 +337,20 @@
             // Toca o som épico de conquista ao abrir a tela final
             tocarSomVitoria(true);
 
-            // Exibe a tela final (tela_final.jpg)
-            container.innerHTML = `<div style="width: 300px; height: 300px; background-image: url('tela_final.jpg'); background-size: cover; background-position: center; border-radius: 6px;"></div>`;
+            // Transforma o container para ocupar a tela inteira em formato retrato (mobile-first)
+            container.style.display = "block";
+            container.style.width = "100vw";
+            container.style.height = "100vh";
+            container.style.maxWidth = "480px"; // Mantém elegante em telas maiores
+            container.style.maxHeight = "85vh";
+            container.style.borderRadius = "0px";
+            container.style.background = "none";
+            container.style.boxShadow = "none";
+
+            // Exibe a tela final (tela_final.jpg) ocupando todo o espaço em retrato
+            container.innerHTML = `<div style="width: 100%; height: 100%; background-image: url('tela_final.jpg'); background-size: cover; background-position: center;"></div>`;
             
-            mensagemVitoria.innerText = `🏆 Você concluiu todos os 22 desafios com sucesso!`;
+            mensagemVitoria.innerText = `🏆 Você concluiu todos os 23 desafios com sucesso!`;
             document.getElementById('proximo-container').style.display = 'block';
 
             botoesContainer.innerHTML = `
@@ -366,7 +384,6 @@
                 
                 const eUltimaImagem = (imagemAtualIndex >= totalImagens);
                 
-                // Toca o som de vitória correspondente (normal ou épico para a última imagem)
                 tocarSomVitoria(eUltimaImagem);
                 
                 mostrarBordasTemp = true;
