@@ -148,8 +148,6 @@
         button:hover { background-color: #0056b3; }
         button.proximo { background-color: #28a745; }
         button.proximo:hover { background-color: #218838; }
-        button.sair { background-color: #dc3545; }
-        button.sair:hover { background-color: #c82333; }
 
         #proximo-container {
             display: none;
@@ -585,9 +583,9 @@
             mensagemVitoria.innerText = `🏆 Você concluiu todos os 23 desafios com sucesso!`;
             document.getElementById('proximo-container').style.display = 'block';
 
+            // Apenas o botão de Reiniciar Jogo (botão Sair removido com sucesso!)
             botoesContainer.innerHTML = `
                 <button onclick="reiniciarJogoTotal()">Reiniciar Jogo</button>
-                <button class="sair" onclick="sairDoJogo()">Sair</button>
             `;
         }
 
@@ -601,11 +599,6 @@
             window.btnProximo = document.getElementById('btn-proximo');
             window.btnEmbaralhar = document.getElementById('btn-embaralhar');
             criarTabuleiro();
-        }
-
-        function sairDoJogo() {
-            alert("Obrigado por jogar Ferratech Puzzles!");
-            window.close();
         }
 
         function verificarVitoria() {
