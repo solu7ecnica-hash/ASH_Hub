@@ -132,11 +132,9 @@
             100% { opacity: 1; }
         }
         .botoes-container {
-            margin-top: 15px;
+            margin-top: 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
         button {
             padding: 10px 15px;
@@ -153,12 +151,13 @@
 
         #proximo-container {
             display: none;
-            margin-top: 10px;
+            margin-top: 15px;
             text-align: center;
         }
         #proximo-container span {
             display: block;
-            font-size: 14px;
+            margin-bottom: 8px;
+            font-size: 15px;
             color: #28a745;
             font-weight: bold;
         }
@@ -276,8 +275,8 @@
         const container = document.getElementById('puzzle-container');
         const contadorTexto = document.getElementById('contador-imagem');
         const cronometroTexto = document.getElementById('cronometro');
-        const btnProximo = document.getElementById('btn-proximo');
-        const btnEmbaralhar = document.getElementById('btn-embaralhar');
+        let btnProximo = document.getElementById('btn-proximo');
+        let btnEmbaralhar = document.getElementById('btn-embaralhar');
         const mensagemVitoria = document.getElementById('mensagem-vitoria');
         const tituloTexto = document.getElementById('titulo-topo');
         const infoContainer = document.getElementById('info-container');
@@ -574,22 +573,20 @@
             container.style.width = "100vw";
             container.style.height = "100vh";
             container.style.maxWidth = "480px";
-            container.style.maxHeight = "78vh";
+            container.style.maxHeight = "85vh";
             container.style.borderRadius = "0px";
             container.style.background = "none";
             container.style.boxShadow = "none";
 
             container.innerHTML = `<div style="width: 100%; height: 100%; background-image: url('tela_final.jpg'); background-size: cover; background-position: center;"></div>`;
             
-            // Agora a mensagem de vitória e o botão de reiniciar ficam juntos na mesma caixa,
-            // garantindo que a mensagem apareça obrigatoriamente EM CIMA do botão!
+            mensagemVitoria.innerText = `🏆 Você concluiu todos os 23 desafios com sucesso!`;
+            document.getElementById('proximo-container').style.display = 'block';
+
+            // Apenas o botão de Reiniciar Jogo (botão Sair removido com sucesso!)
             botoesContainer.innerHTML = `
-                <div style="margin-bottom: 6px; font-size: 14px; color: #28a745; font-weight: bold; text-align: center;">
-                    🏆 Você concluiu todos os 23 desafios com sucesso!
-                </div>
                 <button onclick="reiniciarJogoTotal()">Reiniciar Jogo</button>
             `;
-            document.getElementById('proximo-container').style.display = 'none';
         }
 
         function reiniciarJogoTotal() {
@@ -599,8 +596,10 @@
                 <button id="btn-embaralhar" onclick="embaralhar()">Embaralhar</button>
                 <button class="proximo" id="btn-proximo" onclick="proximaImagem()" style="display: none;">Próxima Imagem ➔</button>
             `;
-            window.btnProximo = document.getElementById('btn-proximo');
-            window.btnEmbaralhar = document.getElementById('btn-embaralhar');
+            // Reatribui as referências globais corretamente após recriar o HTML dos botões
+            btnProximo = document.getElementById('btn-proximo');
+            btnEmbaralhar = document.getElementById('btn-embaralhar');
+            
             criarTabuleiro();
         }
 
