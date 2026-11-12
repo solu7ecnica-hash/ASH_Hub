@@ -124,14 +124,15 @@
         .empty { background: #222; cursor: default; }
         .temp-border { border: 1px solid #28a745 !important; }
         
-        /* Efeito Visual de Clique Elegante para Divulgação */
+        /* Efeito Visual de Clique Elegante (Duração maior para visualização nítida) */
         @keyframes clickPulse {
             0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(0.93); filter: brightness(1.4) drop-shadow(0 0 8px rgba(40, 167, 69, 0.8)); }
+            40% { transform: scale(0.90); filter: brightness(1.5) drop-shadow(0 0 10px rgba(40, 167, 69, 0.9)); }
             100% { transform: scale(1); filter: brightness(1); }
         }
         .clicked-animation {
-            animation: clickPulse 0.2s ease-in-out;
+            animation: clickPulse 0.18s ease-in-out;
+            z-index: 10;
         }
 
         .reveal-tile {
@@ -532,17 +533,18 @@
             const distancia = Math.abs(linhaPeca - linhaVazio) + Math.abs(colunaPeca - colunaVazio);
 
             if (distancia === 1) {
-                // Efeito visual de clique na peça antes de mover
+                // Aplica o efeito visual e aguarda a animação antes de mover a peça
                 const tileElement = container.children[index];
                 if (tileElement) {
                     tileElement.classList.add('clicked-animation');
-                    setTimeout(() => tileElement.classList.remove('clicked-animation'), 200);
                 }
 
-                board[vazioIndex] = board[index];
-                board[index] = size * size - 1;
-                renderizar();
-                verificarVitoria();
+                setTimeout(() => {
+                    board[vazioIndex] = board[index];
+                    board[index] = size * size - 1;
+                    renderizar();
+                    verificarVitoria();
+                }, 150); // 150ms garante que o zoom/brilho apareça perfeitamente
             }
         }
 
