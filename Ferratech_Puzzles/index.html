@@ -123,6 +123,17 @@
         .tile:active { cursor: grabbing; }
         .empty { background: #222; cursor: default; }
         .temp-border { border: 1px solid #28a745 !important; }
+        
+        /* Efeito Visual de Clique Elegante para Divulgação */
+        @keyframes clickPulse {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(0.93); filter: brightness(1.4) drop-shadow(0 0 8px rgba(40, 167, 69, 0.8)); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .clicked-animation {
+            animation: clickPulse 0.2s ease-in-out;
+        }
+
         .reveal-tile {
             opacity: 0;
             animation: fadeInPiece 1s forwards ease-in-out;
@@ -163,7 +174,7 @@
             font-weight: bold;
         }
 
-        /* Sistema de Alerta Nativo Simulado (Limpo, sem URL) */
+        /* Sistema de Alerta Nativo Simulado */
         #custom-alert-overlay {
             display: none;
             position: fixed;
@@ -521,6 +532,13 @@
             const distancia = Math.abs(linhaPeca - linhaVazio) + Math.abs(colunaPeca - colunaVazio);
 
             if (distancia === 1) {
+                // Efeito visual de clique na peça antes de mover
+                const tileElement = container.children[index];
+                if (tileElement) {
+                    tileElement.classList.add('clicked-animation');
+                    setTimeout(() => tileElement.classList.remove('clicked-animation'), 200);
+                }
+
                 board[vazioIndex] = board[index];
                 board[index] = size * size - 1;
                 renderizar();
@@ -566,14 +584,13 @@
             telaVitoriaAtiva = true;
             pararCronometro();
             btnConfig.style.display = "none";
-            tituloTexto.innerText = "FERRATECH PUZZLES"; // Título padrão limpo sem o "Parabéns Mauro"
+            tituloTexto.innerText = "FERRATECH PUZZLES";
             infoContainer.style.display = "none";
             btnEmbaralhar.style.display = "none";
             btnProximo.style.display = "none";
             
             tocarSomVitoria(true);
 
-            // Ajuste do container para centralizar perfeitamente a imagem da tela final
             container.style.display = "block";
             container.style.width = "90vw";
             container.style.height = "65vh";
@@ -585,11 +602,9 @@
 
             container.innerHTML = `<div style="width: 100%; height: 100%; background-image: url('tela_final.jpg'); background-size: cover; background-position: center; border-radius: 8px;"></div>`;
             
-            // Mensagem posicionada logo acima do botão de reiniciar
             mensagemVitoria.innerText = `🏆 Você concluiu todos os 23 desafios com sucesso!`;
             proximoContainer.style.display = 'block';
 
-            // Botão de Reiniciar Jogo centralizado
             botoesContainer.innerHTML = `
                 <button onclick="reiniciarJogoTotal()">Reiniciar Jogo</button>
             `;
