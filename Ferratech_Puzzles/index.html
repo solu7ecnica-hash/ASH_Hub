@@ -124,7 +124,7 @@
         .empty { background: #222; cursor: default; }
         .temp-border { border: 1px solid #28a745 !important; }
         
-        /* Efeito Visual de Clique Elegante (Duração maior para visualização nítida) */
+        /* Efeito Visual de Clique Elegante */
         @keyframes clickPulse {
             0% { transform: scale(1); filter: brightness(1); }
             40% { transform: scale(0.90); filter: brightness(1.5) drop-shadow(0 0 10px rgba(40, 167, 69, 0.9)); }
@@ -321,6 +321,9 @@
         let modoDesafioAtivado = false;
         let limiteTempoConfigurado = 30;
 
+        // Controle da trilha sonora arcade da tela final
+        let arcadeLoopTimer = null;
+
         function abrirConfig() { modalConfig.style.display = 'flex'; }
         function fecharConfig() { modalConfig.style.display = 'none'; }
 
@@ -356,6 +359,25 @@
             embaralhar();
         }
 
+        // Novo: Som de encaixe (clack mecânico ao mover a peça)
+        function tocarSomEncaixe() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(320, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.08);
+            } catch (e) {}
+        }
+
         function tocarSomVitoria(tipoFinal = false) {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -378,6 +400,39 @@
                     osc.stop(ctx.currentTime + index * duracaoNota + (tipoFinal ? 0.4 : 0.3));
                 });
             } catch (e) { console.log("Áudio não suportado."); }
+        }
+
+        // Novo: Trilha sonora Arcade leve e retrô para a tela final
+        function iniciarTrilhaArcadeFinal() {
+            pararTrilhaArcadeFinal();
+            const notasArcade = [330, 392, 440, 523, 440, 392];
+            let passo = 0;
+
+            arcadeLoopTimer = setInterval(() => {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    const ctx = new AudioContext();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = notasArcade[passo];
+                    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.25);
+
+                    passo = (passo + 1) % notasArcade.length;
+                } catch (e) {}
+            }, 300);
+        }
+
+        function pararTrilhaArcadeFinal() {
+            if (arcadeLoopTimer) {
+                clearInterval(arcadeLoopTimer);
+                arcadeLoopTimer = null;
+            }
         }
 
         function tocarSomAlarme() {
@@ -442,6 +497,7 @@
         }
 
         function criarTabuleiro() {
+            pararTrilhaArcadeFinal();
             telaVitoriaAtiva = false;
             btnConfig.style.display = "block";
             tituloTexto.innerText = "FERRATECH PUZZLES";
@@ -533,7 +589,6 @@
             const distancia = Math.abs(linhaPeca - linhaVazio) + Math.abs(colunaPeca - colunaVazio);
 
             if (distancia === 1) {
-                // Aplica o efeito visual e aguarda a animação antes de mover a peça
                 const tileElement = container.children[index];
                 if (tileElement) {
                     tileElement.classList.add('clicked-animation');
@@ -542,9 +597,10 @@
                 setTimeout(() => {
                     board[vazioIndex] = board[index];
                     board[index] = size * size - 1;
+                    tocarSomEncaixe(); // Dispara o som de encaixe na batida do movimento
                     renderizar();
                     verificarVitoria();
-                }, 150); // 150ms garante que o zoom/brilho apareça perfeitamente
+                }, 150);
             }
         }
 
@@ -592,6 +648,7 @@
             btnProximo.style.display = "none";
             
             tocarSomVitoria(true);
+            iniciarTrilhaArcadeFinal(); // Inicia a música de fundo leve estilo arcade
 
             container.style.display = "block";
             container.style.width = "90vw";
@@ -613,6 +670,7 @@
         }
 
         function reiniciarJogoTotal() {
+            pararTrilhaArcadeFinal(); // Para a musiquinha arcade ao reiniciar
             imagemAtualIndex = 1;
             proximoContainer.style.display = 'none';
             botoesContainer.innerHTML = `
