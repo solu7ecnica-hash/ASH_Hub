@@ -323,6 +323,20 @@
 
         let arcadeLoopTimer = null;
 
+        // SINGLETON DE ÁUDIO BLINDADO (Evita vazamento de memória e crash após a 4ª fase)
+        let audioCtx = null;
+        function getAudioContext() {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return null;
+            if (!audioCtx) {
+                audioCtx = new AudioContextClass();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
         function abrirConfig() { modalConfig.style.display = 'flex'; }
         function fecharConfig() { modalConfig.style.display = 'none'; }
 
@@ -358,14 +372,11 @@
             embaralhar();
         }
 
-        // Som de encaixe otimizado e disparado instantaneamente no clique
+        // Som de encaixe otimizado com reaproveitamento de contexto
         function tocarSomEncaixe() {
             try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContext();
-                if (ctx.state === 'suspended') {
-                    ctx.resume();
-                }
+                const ctx = getAudioContext();
+                if (!ctx) return;
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'triangle';
@@ -382,9 +393,8 @@
 
         function tocarSomVitoria(tipoFinal = false) {
             try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContext();
-                if (ctx.state === 'suspended') { ctx.resume(); }
+                const ctx = getAudioContext();
+                if (!ctx) return;
                 const notas = tipoFinal 
                     ? [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50]
                     : [523.25, 659.25, 783.99, 1046.50];
@@ -412,9 +422,8 @@
 
             arcadeLoopTimer = setInterval(() => {
                 try {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    const ctx = new AudioContext();
-                    if (ctx.state === 'suspended') { ctx.resume(); }
+                    const ctx = getAudioContext();
+                    if (!ctx) return;
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = 'sine';
@@ -440,9 +449,8 @@
 
         function tocarSomAlarme() {
             try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const ctx = new AudioContext();
-                if (ctx.state === 'suspended') { ctx.resume(); }
+                const ctx = getAudioContext();
+                if (!ctx) return;
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sawtooth';
@@ -593,7 +601,6 @@
             const distancia = Math.abs(linhaPeca - linhaVazio) + Math.abs(colunaPeca - colunaVazio);
 
             if (distancia === 1) {
-                // Toca o som de encaixe imediatamente no clique/toque
                 tocarSomEncaixe();
 
                 const tileElement = container.children[index];
